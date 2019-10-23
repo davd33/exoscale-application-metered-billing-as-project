@@ -17,27 +17,27 @@
   "This function processes a collection of usage records and produces
    a collection of billing statements (one per account)."
   (let [grouped-by-account-usage-records (group-by #(:usage/account %) usage-records)]
-    (map (fn [[_ account-usage-records]]
-           (let [{[start end] :usage/duration :as billing-record}
-                 (reduce (fn [acc usage-record]
-                           (merge acc (let [duration-init (first (:usage/duration acc))
-                                            {resource :usage/resource
-                                             duration-last :usage/timestamp} usage-record]
-                                        {:usage/duration [duration-init duration-last]
-                                         :usage/resource resource})))
-                         (let [{resource :usage/resource
-                                account :usage/account
-                                first-inst :usage/timestamp
-                                uuid :usage/uuid} (first account-usage-records)]
-                           {:usage/resource resource
-                            :usage/account account
-                            :usage/uuid uuid
-                            :usage/duration [first-inst]})
-                         account-usage-records)]
-             (merge
-              billing-record
-              {:usage/duration (/ (- (.getTime end) (.getTime start)) 60000)})))
-         grouped-by-account-usage-records)))
+    (vec (map (fn [[_ account-usage-records]]
+                (let [{[start end] :usage/duration :as billing-record}
+                      (reduce (fn [acc usage-record]
+                                (merge acc (let [duration-init (first (:usage/duration acc))
+                                                 {resource :usage/resource
+                                                  duration-last :usage/timestamp} usage-record]
+                                             {:usage/duration [duration-init duration-last]
+                                              :usage/resource resource})))
+                              (let [{resource :usage/resource
+                                     account :usage/account
+                                     first-inst :usage/timestamp
+                                     uuid :usage/uuid} (first account-usage-records)]
+                                {:usage/resource resource
+                                 :usage/uuid uuid
+                                 :usage/account account
+                                 :usage/duration [first-inst]})
+                              account-usage-records)]
+                  (merge
+                   billing-record
+                   {:usage/duration (/ (- (.getTime end) (.getTime start)) 60000)})))
+              grouped-by-account-usage-records))))
 
 (defn -main
   "I don't do a whole lot ... yet."
